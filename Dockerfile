@@ -1,6 +1,7 @@
-# Single stage build and runtime image
-# Specify platform to ensure compatibility
-FROM --platform=$BUILDPLATFORM eclipse-temurin:17-jdk
+# Multi-stage build for Maestro
+
+# Stage 1: Build the Maestro codebase
+FROM --platform=$BUILDPLATFORM eclipse-temurin:17-jdk AS builder
 
 # Set ARG for build platform detection
 ARG BUILDPLATFORM
@@ -65,19 +66,44 @@ ENV JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF8 -XX:+IgnoreUnrecognizedVMOptions"
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.jvmargs='-Xmx4g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError'"
 ENV ANDROID_AAPT_IGNORE="*.git:*.github:*.gitignore:*.kt:*.java:*.scala:*.groovy:*.gradle"
 
-# Build and install only the maestro-cli component
+# Build the maestro-cli component and create the distribution zip
 RUN ./gradlew --no-daemon \
     -Pandroid.aapt2.use.pipeline=true \
     -Pandroid.enableR8.fullMode=false \
-    :maestro-cli:installDist
+    :maestro-cli:installDist :maestro-cli:distZip
+
+# Stage 2: Create the runtime image
+FROM eclipse-temurin:17-jdk
+
+# Install unzip
+RUN apt-get update && apt-get install -y \
+    unzip \
+    curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy the pre-built maestro.zip file from the builder stage
+COPY --from=builder /app/maestro-cli/build/distributions/maestro.zip .
+
+# Unzip the file
+RUN unzip maestro.zip && \
+    rm maestro.zip
+
+# Add maestro/bin to PATH
+ENV PATH="/app/maestro/bin:${PATH}"
+
+# Verify installation
+RUN maestro --version
 
 # Expose the port that maestro-studio will run on
-# Note: The actual port is dynamically assigned, but we'll expose a default port
 EXPOSE 8000
 
 # Set the entry point to run maestro-studio
-ENTRYPOINT ["/app/maestro-cli/build/install/maestro/bin/maestro", "studio", "--no-window"]
-
+#ENTRYPOINT ["/app/maestro/bin/maestro", "studio"]
+CMD ["maestro", "studio"]
 # Add a health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8000/ || exit 1
