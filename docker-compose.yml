@@ -5,6 +5,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - BUILDPLATFORM=${BUILDPLATFORM:-linux/$(uname -m)}
+        - TARGETPLATFORM=${TARGETPLATFORM:-linux/$(uname -m)}
     ports:
       - "8000:8000"
     environment:

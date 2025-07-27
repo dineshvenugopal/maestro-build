@@ -29,8 +29,11 @@ Maestro Studio will be available at http://localhost:8000
 If you prefer to use Docker directly:
 
 ```bash
-# Build the image
-docker build -t maestro-studio .
+# Build the image with platform awareness
+docker build --platform=$(docker info --format '{{.Architecture}}') -t maestro-studio .
+
+# Alternative build command for Apple Silicon (M1/M2) or other ARM-based systems
+# docker buildx build --platform linux/$(uname -m) -t maestro-studio .
 
 # Run the container
 docker run -p 8000:8000 --name maestro-studio -d maestro-studio

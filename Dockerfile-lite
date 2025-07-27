@@ -1,5 +1,5 @@
 # Lightweight Dockerfile for Maestro
-FROM eclipse-temurin:19-jdk
+FROM eclipse-temurin:17-jdk
 
 # Install unzip
 RUN apt-get update && apt-get install -y \
