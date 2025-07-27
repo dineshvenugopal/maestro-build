@@ -76,6 +76,7 @@ object PickDeviceInteractor {
             throw CliError("No running emulator found. Start an emulator manually and try again.\nFor setup info checkout: https://maestro.mobile.dev/getting-started/installing-maestro/windows")
         }
 
+        PrintUtils.message("Dinesh test of build maestro project locally\n")
         PrintUtils.message("No running devices found. Launch a device manually or select a number from the options below:\n")
         PrintUtils.message("[1] Start or create a Maestro recommended device\n[2] List existing devices\n[3] Quit")
         val input = readlnOrNull()?.lowercase()?.trim()

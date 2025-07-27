@@ -115,6 +115,8 @@ fun main(args: Array<String>) {
     try {
         System.setProperty("apple.awt.UIElement", "true")
 
+        println("*****Testing by Dinesh*****")
+
         Analytics.maybeAskToEnableAnalytics()
 
         Dependencies.install()
